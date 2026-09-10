@@ -1,8 +1,19 @@
 const fs = require('fs');
 const path = require('path');
 const { Client, Collection, GatewayIntentBits, REST, Routes, ActivityType, PresenceUpdateStatus } = require('discord.js');
-const { token, clientId, guildId } = require('./config.json');
 const { joinVoiceChannel } = require('@discordjs/voice');
+
+// قراءة الإعدادات سواء من متغيرات البيئة (Railway) أو من ملف config.json محلياً
+let config = {};
+try {
+    config = require('./config.json');
+} catch (error) {
+    // لو ملف config.json مش موجود (على الاستضافة)، هيعتمد على متغيرات البيئة
+}
+
+const token = process.env.TOKEN || config.token;
+const clientId = process.env.CLIENT_ID || config.clientId;
+const guildId = process.env.GUILD_ID || config.guildId;
 
 const client = new Client({
     intents: [
@@ -11,9 +22,8 @@ const client = new Client({
         GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.MessageContent
     ],
-    // هنا بنحدد حالة البوت الافتراضية تبقى هلال (Idle) من الأول
     presence: {
-        status: PresenceUpdateStatus.Idle, // دي اللي بتعمل علامة الهلال (Idle)
+        status: PresenceUpdateStatus.Idle,
     }
 });
 
@@ -36,7 +46,6 @@ if (fs.existsSync(foldersPath)) {
 client.once('ready', async () => {
     console.log(`🚀 البوت اشتغل تمام وزي الفل باسم: ${client.user.tag}`);
 
-    // لستة الحالة المتغيرة تحت الهلال
     const statuses = [
         { name: 'البعلاوي بيكره متابعينه', type: ActivityType.Playing },
         { name: 'البعلاوي هيفضل مكروه عندنا', type: ActivityType.Watching },
@@ -48,9 +57,8 @@ client.once('ready', async () => {
         if (i >= statuses.length) i = 0;
         client.user.setActivity(statuses[i].name, { type: statuses[i].type });
         i++;
-    }, 10000); // بتغير الكلام كل 10 ثواني وهلال البوت ثابت زي ما هو!
+    }, 10000);
 
-    // تسجيل الأوامر في ديسكورد (Slash Commands)
     const rest = new REST({ version: '10' }).setToken(token);
     try {
         console.log('🔄 جاري تسجيل الأوامر...');
@@ -63,7 +71,6 @@ client.once('ready', async () => {
         console.error(error);
     }
 
-    // الدخول التلقائي لفويس معين أول ما البوت يشتغل
     const voiceChannelId = '1546181392524771360';
     const channel = client.channels.cache.get(voiceChannelId);
     
@@ -97,7 +104,6 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-// نظام الترحيب البسيط والهادئ بدون صور أو إزعاج في الروم المطلوبة
 client.on('guildMemberAdd', async member => {
     const targetChannelId = '1546177067752890509';
     const channel = member.guild.channels.cache.get(targetChannelId);
@@ -105,8 +111,8 @@ client.on('guildMemberAdd', async member => {
 
     await channel.send({
         content: `منور يا <@${member.id}> اقرا القوانين <#1546177057262674086>`,
-        allowedMentions: { users: [] } // يمنع إزعاج العضو بالتنبيه
+        allowedMentions: { users: [] }
     });
 });
 
-client.login(process.env.TOKEN || token);
+client.login(token);

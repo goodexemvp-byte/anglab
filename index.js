@@ -39,7 +39,7 @@ client.once('ready', async () => {
     // لستة الحالة المتغيرة تحت الهلال
     const statuses = [
         { name: 'البعلاوي بيكره متابعينه', type: ActivityType.Playing },
-        { name: 'الانقلاب مش هينتهي ابدا', type: ActivityType.Watching },
+        { name: 'البعلاوي هيفضل مكروه عندنا', type: ActivityType.Watching },
         { name: 'اندومي الشجق احسن طعم', type: ActivityType.Playing }
     ];
 

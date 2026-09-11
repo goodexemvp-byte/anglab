@@ -52,7 +52,7 @@ module.exports = {
             await targetMember.roles.add(roleId);
 
             await interaction.reply({
-                content: `✅ يا عم مبروك! تم توثيق الواد <@${targetMember.id}> ولبسناه **اللفل ${level}** وشيلنا من عليه طاقية الخيانة بنجاح!`,
+                content: `✅ يا عم مبروك! تم توثيق الواد <@${targetMember.id}> ولبسناه **اللفل ${level}**!`,
                 ephemeral: false
             });
         } catch (error) {

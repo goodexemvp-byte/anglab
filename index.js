@@ -3,13 +3,10 @@ const path = require('path');
 const { Client, Collection, GatewayIntentBits, REST, Routes, ActivityType, PresenceUpdateStatus, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { joinVoiceChannel } = require('@discordjs/voice');
 
-// قراءة الإعدادات سواء من متغيرات البيئة (Railway) أو من ملف config.json محلياً
 let config = {};
 try {
     config = require('./config.json');
-} catch (error) {
-    // لو ملف config.json مش موجود (على الاستضافة)، هيعتمد على متغيرات البيئة
-}
+} catch (error) {}
 
 const token = process.env.TOKEN || config.token;
 const clientId = process.env.CLIENT_ID || config.clientId;
@@ -61,28 +58,27 @@ client.once('ready', async () => {
 
     const rest = new REST({ version: '10' }).setToken(token);
     try {
-        console.log('🔄 جاري تسجيل الأوامر...');
         await rest.put(
             Routes.applicationGuildCommands(clientId, guildId),
             { body: commands },
         );
-        console.log('✅ تم تسجيل الأوامر بنجاح!');
     } catch (error) {
         console.error(error);
     }
 
     const voiceChannelId = '1546181392524771360';
-    const channel = client.channels.cache.get(voiceChannelId);
-    
-    if (channel) {
-        joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-        console.log(`🔊 البوت نزل الفويس في روم: ${channel.name}`);
-    } else {
-        console.log('⚠️ مش لقيت روم الفويس، اتأكد من الـ ID يا باشا.');
+    try {
+        const channel = await client.channels.fetch(voiceChannelId);
+        if (channel) {
+            joinVoiceChannel({
+                channelId: channel.id,
+                guildId: channel.guild.id,
+                adapterCreator: channel.guild.voiceAdapterCreator,
+            });
+            console.log(`🔊 البوت نزل الفويس في روم: ${channel.name}`);
+        }
+    } catch (e) {
+        console.log('⚠️ مش لقيت روم الفويس، تأكد من الـ ID.');
     }
 });
 
@@ -91,37 +87,45 @@ client.on('messageCreate', async message => {
     if (message.author.bot) return;
 
     if (message.content === '6900') {
-        const targetChannelId = '1546177087222710362'; // روم التكتات الجديد
-        const targetChannel = message.guild.channels.cache.get(targetChannelId);
+        const targetChannelId = '1546177087222710362'; 
 
-        if (!targetChannel) {
-            return message.reply('⚠️ مش لقيت روم التكتات، اتأكد من صلاحيات البوت والـ ID يا غالي.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('🎫 نظام تكتات السيرفر')
-            .setDescription('لو عندك مشكلة، عايز تاخد ثقة، أو عندك بلاغ..\nاضغط على الزرار المناسب تحت وابدأ تكت جديد وسيب الباقي علينا.')
-            .setColor(0x00AE86)
-            .setFooter({ text: 'صلي على النبي واعمل اللي أنت عايزه' });
-
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId('ticket_trust')
-                .setLabel('اخذ ثقة')
-                .setStyle(ButtonStyle.Success)
-                .setEmoji('🛡️'),
-            new ButtonBuilder()
-                .setCustomId('ticket_report')
-                .setLabel('إبلاغ عن انقلاب ضد السيرفر')
-                .setStyle(ButtonStyle.Danger)
-                .setEmoji('🚨')
-        );
-
-        await targetChannel.send({ embeds: [embed], components: [row] });
-        
         try {
-            await message.delete();
-        } catch (e) {}
+            // جلب الروم مباشرة من السيرفر متجاوزاً الكاش
+            const targetChannel = await message.guild.channels.fetch(targetChannelId);
+
+            if (!targetChannel) {
+                return message.reply('⚠️ مش لقيت روم التكتات خالص، تأكد من الـ ID يا غالي.');
+            }
+
+            const embed = new EmbedBuilder()
+                .setTitle('🎫 نظام تكتات السيرفر')
+                .setDescription('لو عندك مشكلة، عايز تاخد ثقة، أو عندك بلاغ..\nاضغط على الزرار المناسب تحت وابدأ تكت جديد وسيب الباقي علينا.')
+                .setColor(0x00AE86)
+                .setFooter({ text: 'صلي على النبي واعمل اللي أنت عايزه' });
+
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('ticket_trust')
+                    .setLabel('اخذ ثقة')
+                    .setStyle(ButtonStyle.Success)
+                    .setEmoji('🛡️'),
+                new ButtonBuilder()
+                    .setCustomId('ticket_report')
+                    .setLabel('إبلاغ عن انقلاب ضد السيرفر')
+                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji('🚨')
+            );
+
+            await targetChannel.send({ embeds: [embed], components: [row] });
+            
+            try {
+                await message.delete();
+            } catch (e) {}
+
+        } catch (error) {
+            console.error(error);
+            return message.reply('❌ حصل خطأ أثناء البحث عن الروم، تأكد أن البوت يمتلك صلاحيات كافية.');
+        }
     }
 });
 
@@ -147,7 +151,6 @@ client.on('interactionCreate', async interaction => {
     if (interaction.isButton()) {
         const { customId, guild, member, channel } = interaction;
 
-        // فتح تكت جديد
         if (customId === 'ticket_trust' || customId === 'ticket_report') {
             const existingChannel = guild.channels.cache.find(c => c.name === `ticket-${member.user.username.toLowerCase()}`);
             if (existingChannel) {
@@ -159,7 +162,7 @@ client.on('interactionCreate', async interaction => {
             try {
                 const ticketChannel = await guild.channels.create({
                     name: `ticket-${member.user.username}`,
-                    type: 0, // GuildText
+                    type: 0, 
                     permissionOverwrites: [
                         {
                             id: guild.id,
@@ -210,7 +213,6 @@ client.on('interactionCreate', async interaction => {
             }
         }
 
-        // استلام التكت
         if (customId === 'claim_ticket') {
             const oldEmbed = interaction.message.embeds[0];
             const updatedEmbed = EmbedBuilder.from(oldEmbed)
@@ -224,30 +226,28 @@ client.on('interactionCreate', async interaction => {
             await channel.send({ content: `✅ البطل <@${member.id}> استلم التكت وهيتتابع معاك!` });
         }
 
-        // حذف التكت
         if (customId === 'delete_ticket') {
             await interaction.reply({ content: '🗑️ جاري حذف التكت نهائياً خلال 3 ثواني...' });
             setTimeout(async () => {
                 try {
                     await channel.delete();
-                } catch (e) {
-                    console.error(e);
-                }
+                } catch (e) {}
             }, 3000);
         }
     }
 });
 
-// الترحيب بالأعضاء الجدد
 client.on('guildMemberAdd', async member => {
     const targetChannelId = '1546177067752890509';
-    const channel = member.guild.channels.cache.get(targetChannelId);
-    if (!channel) return;
-
-    await channel.send({
-        content: `منور يا <@${member.id}> اقرا القوانين <#1546177057262674086>`,
-        allowedMentions: { users: [] }
-    });
+    try {
+        const channel = await member.guild.channels.fetch(targetChannelId);
+        if (channel) {
+            await channel.send({
+                content: `منور يا <@${member.id}> اقرا القوانين <#1546177057262674086>`,
+                allowedMentions: { users: [] }
+            });
+        }
+    } catch (e) {}
 });
 
 client.login(token);

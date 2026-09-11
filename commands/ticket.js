@@ -6,7 +6,7 @@ module.exports = {
         .setDescription('إرسال رسالة نظام التكتات في الروم المخصص')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator), // لأصحاب الصلاحيات بس
     async execute(interaction) {
-        const targetChannelId = '1547943307437547540';
+        const targetChannelId = '1546177087222710362';
         const targetChannel = interaction.guild.channels.cache.get(targetChannelId);
 
         if (!targetChannel) {

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { Client, Collection, GatewayIntentBits, REST, Routes, ActivityType, PresenceUpdateStatus } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, REST, Routes, ActivityType, PresenceUpdateStatus, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { joinVoiceChannel } = require('@discordjs/voice');
 
 // قراءة الإعدادات سواء من متغيرات البيئة (Railway) أو من ملف config.json محلياً
@@ -86,24 +86,121 @@ client.once('ready', async () => {
     }
 });
 
+// معالجة الأوامر العادية (Slash Commands)
 client.on('interactionCreate', async interaction => {
-    if (!interaction.isChatInputCommand()) return;
+    if (interaction.isChatInputCommand()) {
+        const command = client.commands.get(interaction.commandName);
+        if (!command) return;
 
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(error);
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp({ content: 'حصل بلوة وأنا بنفذ الأمر ده!', ephemeral: true });
+            } else {
+                await interaction.reply({ content: 'حصل بلوة وأنا بنفذ الأمر ده!', ephemeral: true });
+            }
+        }
+        return;
+    }
 
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        console.error(error);
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'حصل بلوة وأنا بنفذ الأمر ده!', ephemeral: true });
-        } else {
-            await interaction.reply({ content: 'حصل بلوة وأنا بنفذ الأمر ده!', ephemeral: true });
+    // معالجة أزرار التكتات (فتح، استلام، وحذف)
+    if (interaction.isButton()) {
+        const { customId, guild, member, channel } = interaction;
+
+        // 1. فتح تكت جديد عند الضغط على أزرار روم التكتات الأساسي
+        if (customId === 'ticket_trust' || customId === 'ticket_report') {
+            const existingChannel = guild.channels.cache.find(c => c.name === `ticket-${member.user.username.toLowerCase()}`);
+            if (existingChannel) {
+                return interaction.reply({ content: `⚠️ يا هبش، أنت فاتح تكت بالفعل هنا: <#${existingChannel.id}>`, ephemeral: true });
+            }
+
+            await interaction.deferReply({ ephemeral: true });
+
+            try {
+                const ticketChannel = await guild.channels.create({
+                    name: `ticket-${member.user.username}`,
+                    type: 0, // GuildText
+                    permissionOverwrites: [
+                        {
+                            id: guild.id,
+                            deny: ['ViewChannel'],
+                        },
+                        {
+                            id: member.id,
+                            allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'],
+                        },
+                        {
+                            id: client.user.id,
+                            allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'],
+                        },
+                    ],
+                });
+
+                const reasonText = customId === 'ticket_trust' ? '🛡️ طلب أخذ ثقة' : '🚨 إبلاغ عن انقلاب ضد السيرفر';
+
+                const embed = new EmbedBuilder()
+                    .setTitle('📜 قوانين وتعليمات التكت')
+                    .setDescription('# صلي علي النبي واعمل اللي انت عايزه\n\nأهلاً بيك يا بطل في تكت الخاص بك.\n\n**السبب:** ' + reasonText + '\n\n**قوانين التكت:**\n1. ممنوع الإزعاج أو الهزار السخيف عشان محدش يتقرش.\n2. اكتب مشكلتك أو طلبك باختصار ووضوح.\n3. الإدارة هتدخل معاك في أقرب وقت ممكن.')
+                    .setColor(0xF1C40F);
+
+                const ticketRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('claim_ticket')
+                        .setLabel('استلام التكت')
+                        .setStyle(ButtonStyle.Primary)
+                        .setEmoji('🙋‍♂️'),
+                    new ButtonBuilder()
+                        .setCustomId('delete_ticket')
+                        .setLabel('حذف التكت')
+                        .setStyle(ButtonStyle.Danger)
+                        .setEmoji('🗑️')
+                );
+
+                await ticketChannel.send({
+                    content: `منور يا <@${member.id}>، الإدارة هتكون معاك قريب.`,
+                    embeds: [embed],
+                    components: [ticketRow]
+                });
+
+                await interaction.editReply({ content: `✅ اتفتحلك تكت يا غالي: <#${ticketChannel.id}>` });
+
+            } catch (error) {
+                console.error(error);
+                await interaction.editReply({ content: '❌ حصلت مشكلة وأنا بفتح التكت.' });
+            }
+        }
+
+        // 2. زرار استلام التكت (Claim)
+        if (customId === 'claim_ticket') {
+            const oldEmbed = interaction.message.embeds[0];
+            const updatedEmbed = EmbedBuilder.from(oldEmbed)
+                .addFields({ name: '👤 تم الاستلام بواسطة', value: `<@${member.id}>`, inline: false });
+
+            await interaction.update({
+                embeds: [updatedEmbed],
+                components: interaction.message.components
+            });
+
+            await channel.send({ content: `✅ البطل <@${member.id}> استلم التكت وهيتتابع معاك!` });
+        }
+
+        // 3. زرار حذف التكت (Delete)
+        if (customId === 'delete_ticket') {
+            await interaction.reply({ content: '🗑️ جاري حذف التكت نهائياً خلال 3 ثواني...' });
+            setTimeout(async () => {
+                try {
+                    await channel.delete();
+                } catch (e) {
+                    console.error(e);
+                }
+            }, 3000);
         }
     }
 });
 
+// الترحيب بالأعضاء الجدد
 client.on('guildMemberAdd', async member => {
     const targetChannelId = '1546177067752890509';
     const channel = member.guild.channels.cache.get(targetChannelId);

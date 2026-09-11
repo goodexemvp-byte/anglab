@@ -119,9 +119,13 @@ client.on('interactionCreate', async interaction => {
             await interaction.deferReply({ ephemeral: true });
 
             try {
+                // الـ ID الجديد اللي طلبته لتنظيم التكتات (سواء كان Category أو روم)
+                const parentId = '1546177087222710362';
+
                 const ticketChannel = await guild.channels.create({
                     name: `ticket-${member.user.username}`,
                     type: 0, // GuildText
+                    parent: parentId, // ربط التكت بالـ ID الجديد
                     permissionOverwrites: [
                         {
                             id: guild.id,
@@ -168,7 +172,7 @@ client.on('interactionCreate', async interaction => {
 
             } catch (error) {
                 console.error(error);
-                await interaction.editReply({ content: '❌ حصلت مشكلة وأنا بفتح التكت.' });
+                await interaction.editReply({ content: '❌ حصلت مشكلة وأنا بفتح التكت، تأكد أن الـ ID صحيح.' });
             }
         }
 

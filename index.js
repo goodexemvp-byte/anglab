@@ -86,17 +86,16 @@ client.once('ready', async () => {
     }
 });
 
-// التعامل مع الرسائل (عشان لما تكتب 6900) والأزرار
+// التعامل مع الرسائل (لما تكتب 6900)
 client.on('messageCreate', async message => {
     if (message.author.bot) return;
 
-    // لما تكتب 6900
     if (message.content === '6900') {
-        const targetChannelId = '1547943307437547540'; // روم إرسال رسالة التكتات
+        const targetChannelId = '1546177087222710362'; // روم التكتات الجديد
         const targetChannel = message.guild.channels.cache.get(targetChannelId);
 
         if (!targetChannel) {
-            return message.reply('⚠️ مش لقيت روم التكتات، اتأكد من الـ ID يا غالي.');
+            return message.reply('⚠️ مش لقيت روم التكتات، اتأكد من صلاحيات البوت والـ ID يا غالي.');
         }
 
         const embed = new EmbedBuilder()
@@ -120,7 +119,6 @@ client.on('messageCreate', async message => {
 
         await targetChannel.send({ embeds: [embed], components: [row] });
         
-        // مسح رسالتك عشان تداري السرية
         try {
             await message.delete();
         } catch (e) {}
@@ -159,12 +157,9 @@ client.on('interactionCreate', async interaction => {
             await interaction.deferReply({ ephemeral: true });
 
             try {
-                const parentId = '1546177087222710362'; // روم / تصنيف التكتات
-
                 const ticketChannel = await guild.channels.create({
                     name: `ticket-${member.user.username}`,
                     type: 0, // GuildText
-                    parent: parentId,
                     permissionOverwrites: [
                         {
                             id: guild.id,
@@ -211,7 +206,7 @@ client.on('interactionCreate', async interaction => {
 
             } catch (error) {
                 console.error(error);
-                await interaction.editReply({ content: '❌ حصلت مشكلة وأنا بفتح التكت، تأكد أن الـ ID صحيح.' });
+                await interaction.editReply({ content: '❌ حصلت مشكلة وأنا بفتح التكت.' });
             }
         }
 
@@ -245,8 +240,8 @@ client.on('interactionCreate', async interaction => {
 
 // الترحيب بالأعضاء الجدد
 client.on('guildMemberAdd', async member => {
-    const targetChannelId = '1546177087222710362';
-    const channel = member.guild.channels.get(targetChannelId);
+    const targetChannelId = '1546177067752890509';
+    const channel = member.guild.channels.cache.get(targetChannelId);
     if (!channel) return;
 
     await channel.send({

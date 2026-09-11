@@ -245,7 +245,7 @@ client.on('interactionCreate', async interaction => {
 
 // الترحيب بالأعضاء الجدد
 client.on('guildMemberAdd', async member => {
-    const targetChannelId = '1546177067752890509';
+    const targetChannelId = '1546177087222710362';
     const channel = member.guild.channels.get(targetChannelId);
     if (!channel) return;
 

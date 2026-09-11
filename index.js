@@ -153,7 +153,7 @@ client.on('interactionCreate', async interaction => {
         if (customId === 'ticket_trust' || customId === 'ticket_report') {
             const existingChannel = guild.channels.cache.find(c => c.name === `ticket-${member.user.username.toLowerCase()}`);
             if (existingChannel) {
-                return interaction.reply({ content: `⚠️ يا هبش، أنت فاتح تكت بالفعل هنا: <#${existingChannel.id}>`, ephemeral: true });
+                return interaction.reply({ content: `⚠️ يا حبيبي أنت فاتح تكت بالفعل هنا: <#${existingChannel.id}>`, ephemeral: true });
             }
 
             await interaction.deferReply({ ephemeral: true });

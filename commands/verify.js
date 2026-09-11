@@ -1,66 +1,60 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
+const LEVEL_ROLES = {
+    1: '1547561328753778718',
+    2: '1547561634422325288',
+    3: '1546180583636471849'
+};
+
+const PENALTY_ROLE_ID = '1547936949506154546';
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('وثق')
-        .setDescription('توثيق الواد ومنحه لفل التوثيق')
+        .setDescription('توثيق العضو ومنححه رتبة')
         .addUserOption(option =>
             option.setName('العضو')
-                  .setDescription('مين الواد اللي عايز توثقه؟')
+                  .setDescription('العضو المراد توثيقه')
                   .setRequired(true))
         .addIntegerOption(option =>
             option.setName('اللفل')
-                  .setDescription('اكتب رقم اللفل (1، 2، أو 3)')
+                  .setDescription('اختر مستوى التوثيق المطلوبة')
                   .setRequired(true)
                   .addChoices(
                       { name: '1', value: 1 },
                       { name: '2', value: 2 },
                       { name: '3', value: 3 }
                   ))
-        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles), // للمشرفين والناس الثقيلة بس
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
 
     async execute(interaction) {
         const targetMember = interaction.options.getMember('العضو');
         const level = interaction.options.getInteger('اللفل');
 
         if (!targetMember) {
-            return await interaction.reply({
-                content: '❌ يا باشا الواد ده مش موجود معانا في السيرفر أصلاً!',
+            return interaction.reply({
+                content: 'العضو مش موجود في السيرفر.',
                 ephemeral: true
             });
         }
 
-        // رتب المستويات حسب الاختيار
-        const roles = {
-            1: '1547561328753778718',
-            2: '1547561634422325288',
-            3: '1546180583636471849'
-        };
-
-        const roleId = roles[level];
-        
-        // رتبة الخيانة اللي هتتشال منه لو واخدها
-        const traitorRoleId = '1547936949506154546';
-
         try {
-            // لو معاه رتبة الخيانة، نشيلهاله الأول
-            if (targetMember.roles.cache.has(traitorRoleId)) {
-                await targetMember.roles.remove(traitorRoleId);
+            if (targetMember.roles.cache.has(PENALTY_ROLE_ID)) {
+                await targetMember.roles.remove(PENALTY_ROLE_ID);
             }
 
-            // نديله رتبة اللفل الجديد
-            await targetMember.roles.add(roleId);
+            await targetMember.roles.add(LEVEL_ROLES[level]);
 
-            await interaction.reply({
-                content: `✅ يا عم مبروك! تم توثيق الواد <@${targetMember.id}> ولبسناه **اللفل ${level}**!`,
+            return interaction.reply({
+                content: `تم توثيق العضو <@${targetMember.id}> بنجاح ومنحه المستوى ${level}.`,
                 ephemeral: false
             });
         } catch (error) {
             console.error(error);
-            await interaction.reply({
-                content: '❌ يا حزني! مش عارف أعدل الرتب، اتأكد إن رتبة البوت فوق الرتب دي كلها وإن معاه صلاحية إدارة الرتب (Manage Roles).',
+            return interaction.reply({
+                content: 'حدث خطأ أثناء تعديل رتب العضو. تأكد من صلاحيات البوت وترتيب الرتب.',
                 ephemeral: true
             });
         }
-    },
+    }
 };

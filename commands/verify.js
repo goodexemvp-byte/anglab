@@ -3,27 +3,34 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('وثق')
-        .setDescription('توثيق الأعضاء ومنحهم رتب المستويات المختلفة')
+        .setDescription('توثيق الواد ومنحه لفل التوثيق')
         .addUserOption(option =>
             option.setName('العضو')
-                .setDescription('العضو المراد توثيقه')
-                .setRequired(true))
+                  .setDescription('مين الواد اللي عايز توثقه؟')
+                  .setRequired(true))
         .addIntegerOption(option =>
             option.setName('اللفل')
-                .setDescription('اختر مستوى التوثيق (1، 2، أو 3)')
-                .setRequired(true)
-                .addChoices(
-                    { name: 'اللفل الأول', value: 1 },
-                    { name: 'اللفل الثاني', value: 2 },
-                    { name: 'اللفل الثالث', value: 3 }
-                ))
-        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles), // صلاحية إدارة الرتب للمشرفين فقط
+                  .setDescription('اكتب رقم اللفل (1، 2، أو 3)')
+                  .setRequired(true)
+                  .addChoices(
+                      { name: '1', value: 1 },
+                      { name: '2', value: 2 },
+                      { name: '3', value: 3 }
+                  ))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles), // للمشرفين والناس الثقيلة بس
 
     async execute(interaction) {
         const targetMember = interaction.options.getMember('العضو');
         const level = interaction.options.getInteger('اللفل');
 
-        // أفريدج آي دي الرتب لكل لفل طلبته
+        if (!targetMember) {
+            return await interaction.reply({
+                content: '❌ يا باشا الواد ده مش موجود معانا في السيرفر أصلاً!',
+                ephemeral: true
+            });
+        }
+
+        // رتب المستويات حسب الاختيار
         const roles = {
             1: '1547561328753778718',
             2: '1547561634422325288',
@@ -31,18 +38,27 @@ module.exports = {
         };
 
         const roleId = roles[level];
+        
+        // رتبة الخيانة اللي هتتشال منه لو واخدها
+        const traitorRoleId = '1547936949506154546';
 
         try {
-            // إعطاء الرتبة للعضو
+            // لو معاه رتبة الخيانة، نشيلهاله الأول
+            if (targetMember.roles.cache.has(traitorRoleId)) {
+                await targetMember.roles.remove(traitorRoleId);
+            }
+
+            // نديله رتبة اللفل الجديد
             await targetMember.roles.add(roleId);
+
             await interaction.reply({
-                content: `✅ تم توثيق العضو <@${targetMember.id}> بنجاح وإعطائه **اللفل ${level}**!`,
-                ephemeral: false // تظهر للجميع أنك وثقته
+                content: `✅ يا عم مبروك! تم توثيق الواد <@${targetMember.id}> ولبسناه **اللفل ${level}** وشيلنا من عليه طاقية الخيانة بنجاح!`,
+                ephemeral: false
             });
         } catch (error) {
             console.error(error);
             await interaction.reply({
-                content: '❌ حصل مشكلة، تأكد أن رتبة البوت أعلى من الرتبة المراد إعطاؤها وأن لديه صلاحيات كافية.',
+                content: '❌ يا حزني! مش عارف أعدل الرتب، اتأكد إن رتبة البوت فوق الرتب دي كلها وإن معاه صلاحية إدارة الرتب (Manage Roles).',
                 ephemeral: true
             });
         }

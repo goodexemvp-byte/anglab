@@ -86,7 +86,48 @@ client.once('ready', async () => {
     }
 });
 
-// معالجة الأوامر العادية (Slash Commands)
+// التعامل مع الرسائل (عشان لما تكتب 6900) والأزرار
+client.on('messageCreate', async message => {
+    if (message.author.bot) return;
+
+    // لما تكتب 6900
+    if (message.content === '6900') {
+        const targetChannelId = '1547943307437547540'; // روم إرسال رسالة التكتات
+        const targetChannel = message.guild.channels.cache.get(targetChannelId);
+
+        if (!targetChannel) {
+            return message.reply('⚠️ مش لقيت روم التكتات، اتأكد من الـ ID يا غالي.');
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('🎫 نظام تكتات السيرفر')
+            .setDescription('لو عندك مشكلة، عايز تاخد ثقة، أو عندك بلاغ..\nاضغط على الزرار المناسب تحت وابدأ تكت جديد وسيب الباقي علينا.')
+            .setColor(0x00AE86)
+            .setFooter({ text: 'صلي على النبي واعمل اللي أنت عايزه' });
+
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('ticket_trust')
+                .setLabel('اخذ ثقة')
+                .setStyle(ButtonStyle.Success)
+                .setEmoji('🛡️'),
+            new ButtonBuilder()
+                .setCustomId('ticket_report')
+                .setLabel('إبلاغ عن انقلاب ضد السيرفر')
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji('🚨')
+        );
+
+        await targetChannel.send({ embeds: [embed], components: [row] });
+        
+        // مسح رسالتك عشان تداري السرية
+        try {
+            await message.delete();
+        } catch (e) {}
+    }
+});
+
+// معالجة الأوامر والأزرار
 client.on('interactionCreate', async interaction => {
     if (interaction.isChatInputCommand()) {
         const command = client.commands.get(interaction.commandName);
@@ -105,11 +146,10 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
-    // معالجة أزرار التكتات (فتح، استلام، وحذف)
     if (interaction.isButton()) {
         const { customId, guild, member, channel } = interaction;
 
-        // 1. فتح تكت جديد عند الضغط على أزرار روم التكتات الأساسي
+        // فتح تكت جديد
         if (customId === 'ticket_trust' || customId === 'ticket_report') {
             const existingChannel = guild.channels.cache.find(c => c.name === `ticket-${member.user.username.toLowerCase()}`);
             if (existingChannel) {
@@ -119,13 +159,12 @@ client.on('interactionCreate', async interaction => {
             await interaction.deferReply({ ephemeral: true });
 
             try {
-                // الـ ID الجديد اللي طلبته لتنظيم التكتات (سواء كان Category أو روم)
-                const parentId = '1546177087222710362';
+                const parentId = '1546177087222710362'; // روم / تصنيف التكتات
 
                 const ticketChannel = await guild.channels.create({
                     name: `ticket-${member.user.username}`,
                     type: 0, // GuildText
-                    parent: parentId, // ربط التكت بالـ ID الجديد
+                    parent: parentId,
                     permissionOverwrites: [
                         {
                             id: guild.id,
@@ -176,7 +215,7 @@ client.on('interactionCreate', async interaction => {
             }
         }
 
-        // 2. زرار استلام التكت (Claim)
+        // استلام التكت
         if (customId === 'claim_ticket') {
             const oldEmbed = interaction.message.embeds[0];
             const updatedEmbed = EmbedBuilder.from(oldEmbed)
@@ -190,7 +229,7 @@ client.on('interactionCreate', async interaction => {
             await channel.send({ content: `✅ البطل <@${member.id}> استلم التكت وهيتتابع معاك!` });
         }
 
-        // 3. زرار حذف التكت (Delete)
+        // حذف التكت
         if (customId === 'delete_ticket') {
             await interaction.reply({ content: '🗑️ جاري حذف التكت نهائياً خلال 3 ثواني...' });
             setTimeout(async () => {
@@ -207,7 +246,7 @@ client.on('interactionCreate', async interaction => {
 // الترحيب بالأعضاء الجدد
 client.on('guildMemberAdd', async member => {
     const targetChannelId = '1546177067752890509';
-    const channel = member.guild.channels.cache.get(targetChannelId);
+    const channel = member.guild.channels.get(targetChannelId);
     if (!channel) return;
 
     await channel.send({

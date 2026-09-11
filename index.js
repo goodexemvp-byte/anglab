@@ -199,7 +199,7 @@ client.on('interactionCreate', async interaction => {
                 );
 
                 await ticketChannel.send({
-                    content: `منور يا <@${member.id}>.`,
+                    content: `منور يا <@${member.id}>، الإدارة هتكون معاك قريب.`,
                     embeds: [embed],
                     components: [ticketRow]
                 });

@@ -180,17 +180,9 @@ client.on('interactionCreate', async interaction => {
 
                 const reasonText = customId === 'ticket_trust' ? '🛡️ طلب أخذ ثقة' : '🚨 إبلاغ عن انقلاب ضد السيرفر';
 
-                const rulesDescription = `# صلي علي النبي واعمل اللي انت عايزه
-
-***القوانين دي معمولة عشان السيرفر يفضل مكان مريح وآمن للكل. مش الهدف منها التضييق على الأعضاء، لكن لمنع التصرفات اللي ممكن تبوظ تجربة الناس أو تسبب مشاكل. اقرأ القوانين كويس قبل ما تستخدم السيرفر، لأن عدم معرفتك بالقانون مش بيمنع تطبيقه عليك.***
-
-**السبب:** ${reasonText}
-
-اولا لازم تعمل اللي انت عايزه هنا اعتبر ان المكان دا بيتك;
-
                 const embed = new EmbedBuilder()
-                    .setTitle('📜 قوانين وتعليمات السيرفر')
-                    .setDescription(rulesDescription)
+                    .setTitle('🎫 تكت جديد')
+                    .setDescription(`# صلي علي النبي واعمل اللي انت عايزه\n\n**السبب:** ${reasonText}\n\nأهلاً بيك يا بطل، الإدارة هتتابع معاك في أقرب وقت.`)
                     .setColor(0xF1C40F);
 
                 const ticketRow = new ActionRowBuilder().addComponents(
@@ -207,7 +199,7 @@ client.on('interactionCreate', async interaction => {
                 );
 
                 await ticketChannel.send({
-                    content: `منور يا <@${member.id}>، الإدارة هتكون معاك قريب.`,
+                    content: `منور يا <@${member.id}>.`,
                     embeds: [embed],
                     components: [ticketRow]
                 });

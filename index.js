@@ -2,11 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const { Client, Collection, GatewayIntentBits, REST, Routes, ActivityType, PresenceUpdateStatus, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { joinVoiceChannel } = require('@discordjs/voice');
-const { GoogleGenAI } = require('@google/genai');
 
-// تهيئة جيميناي باستخدام متغير البيئة في Railway
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const TARGET_AI_CHANNEL = '1548278323350737037';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 let config = {};
 try {
@@ -87,6 +85,34 @@ client.once('ready', async () => {
     }
 });
 
+// دالة الاتصال المباشر بـ Gemini API من غير مكتبات
+async function askGemini(promptText) {
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                system_instruction: {
+                    parts: [{ text: "أنت بوت عصبي ودمك حامي، بتكره شخص اسمه البعلاوي كره عمى، وأي حد هيجيب سيرته أو يطبل له هتهدده بالبند والطرش فوراً. اتكلم دائماً باللهجة المصرية البلدية وبأسلوب حاد وقوي." }]
+                },
+                contents: [{
+                    parts: [{ text: promptText }]
+                }]
+            })
+        });
+
+        const data = await response.json();
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            return "يا عم دماغنا فاصلة ومش عارف أرد!";
+        }
+    } catch (err) {
+        console.error("Gemini Fetch Error:", err);
+        return "حصلت مشكلة في الاتصال يا غالي.";
+    }
+}
+
 // التعامل مع الرسائل (الأوامر والـ AI)
 client.on('messageCreate', async message => {
     if (message.author.bot) return;
@@ -95,19 +121,13 @@ client.on('messageCreate', async message => {
     if (message.channel.id === TARGET_AI_CHANNEL) {
         try {
             await message.channel.sendTyping();
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: message.content,
-                config: {
-                    systemInstruction: "أنت بوت عصبي ودمك حامي، بتكره شخص اسمه البعلاوي كره عمى، وأي حد هيجيب سيرته أو يطبل له هتهدده بالبند والطرش فوراً. اتكلم دائماً باللهجة المصرية البلدية وبأسلوب حاد وقوي."
-                }
-            });
-            await message.reply(response.text);
+            const replyText = await askGemini(message.content);
+            await message.reply(replyText);
         } catch (error) {
             console.error('خطأ في الـ AI:', error);
             await message.reply('يا عم دماغنا فاصلة دلوقتي ومش هعرف أرد!');
         }
-        return; // عشان ما ينفذش باقي الأكواد لو الرسالة في الروم دي
+        return; 
     }
 
     // 2. أمر إنشاء التكتات لما تكتب 6900

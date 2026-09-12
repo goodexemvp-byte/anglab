@@ -87,12 +87,7 @@ client.once('ready', async () => {
 
 async function askGemini(promptText) {
     try {
-        // بنسحب لستة الموديلات المتاحة للمفتاح ده عشان نشوف اسم الموديل الصح
-        const listResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`);
-        const listData = await listResponse.json();
-        console.log("Available Models for this API Key:", JSON.stringify(listData, null, 2));
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -106,12 +101,13 @@ async function askGemini(promptText) {
         
         if (data.error) {
             console.error("Gemini API Error Details:", data.error);
-            return "يا عم الـ API زعلان وبيقول: " + data.error.message;
+            return "شكل البعلاوي دعي علينا ششوف بس: " + data.error.message;
         }
 
         if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0].text) {
             return data.candidates[0].content.parts[0].text;
         } else {
+            console.log("Unexpected API Response Structure:", JSON.stringify(data));
             return "يا عم دماغنا فاصلة ومش عارف أرد!";
         }
     } catch (err) {

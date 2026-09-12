@@ -88,7 +88,7 @@ client.once('ready', async () => {
 // دالة الاتصال المباشر بـ Gemini API بالموديل الجديد
 async function askGemini(promptText) {
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -119,7 +119,6 @@ async function askGemini(promptText) {
         return "حصلت مشكلة في الاتصال يا غالي.";
     }
 }
-
 // التعامل مع الرسائل (الأوامر والـ AI)
 client.on('messageCreate', async message => {
     if (message.author.bot) return;

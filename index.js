@@ -85,10 +85,10 @@ client.once('ready', async () => {
     }
 });
 
-// دالة الاتصال المباشر بـ Gemini API من غير مكتبات
+// دالة الاتصال المباشر بـ Gemini API مع الهيكل السليم 100%
 async function askGemini(promptText) {
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -102,9 +102,16 @@ async function askGemini(promptText) {
         });
 
         const data = await response.json();
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
+        
+        if (data.error) {
+            console.error("Gemini API Error Details:", data.error);
+            return "يا عم الـ API زعلان وبيقول: " + data.error.message;
+        }
+
+        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0].text) {
             return data.candidates[0].content.parts[0].text;
         } else {
+            console.log("Unexpected API Response Structure:", JSON.stringify(data));
             return "يا عم دماغنا فاصلة ومش عارف أرد!";
         }
     } catch (err) {

@@ -8,7 +8,7 @@ module.exports = {
             option.setName('العضو')
                   .setDescription('العضو المراد معاقبته')
                   .setRequired(true))
-        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles), // للمشرفين فقط
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
 
     async execute(interaction) {
         const targetMember = interaction.options.getMember('العضو');
@@ -20,26 +20,21 @@ module.exports = {
             });
         }
 
-        // الرتب اللي هيتسحب منه (لو معاه أي واحدة فيهم أو كلهم)
         const rolesToRemove = [
-            '1548652935968456705';
+            '1548652935968456705',
             '1546180583636471849',
             '1547561328753778718',
             '1547561634422325288'
         ];
 
-        // رتبة العقوبة (الخائن) اللي هتتضاف ليه
         const traitorRoleId = '1547936949506154546';
 
         try {
-            // سحب الرتب القديمة اللي عنده من اللستة
             await targetMember.roles.remove(rolesToRemove);
-
-            // إعطاؤه رتبة العقوبة
             await targetMember.roles.add(traitorRoleId);
 
             await interaction.reply({
-                content: `🚨 تم سحب الرتب الموثوقة وتصنيف العضو <@${targetMember.id}> في قائمة الخونة بنجاح!`,
+                content: `🚨 تم سحب الرتب وتصنيف العضو <@${targetMember.id}> بنجاح!`,
                 ephemeral: false
             });
         } catch (error) {

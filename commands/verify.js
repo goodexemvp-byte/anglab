@@ -6,12 +6,15 @@ const LEVEL_ROLES = {
     3: '1546180583636471849'
 };
 
-const PENALTY_ROLE_ID = '1547936949506154546';
+const PENALTY_ROLES = [
+    '1547936949506154546',
+    '1548652935968456705'
+];
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('وثق')
-        .setDescription('توثيق العضو ومنححه رتبة')
+        .setDescription('توثيق العضو ومنحه رتبة المستوى المحددة')
         .addUserOption(option =>
             option.setName('العضو')
                   .setDescription('العضو المراد توثيقه')
@@ -33,16 +36,13 @@ module.exports = {
 
         if (!targetMember) {
             return interaction.reply({
-                content: 'العضو مش موجود في السيرفر.',
+                content: 'العضو غير موجود في السيرفر.',
                 ephemeral: true
             });
         }
 
         try {
-            if (targetMember.roles.cache.has(PENALTY_ROLE_ID)) {
-                await targetMember.roles.remove(PENALTY_ROLE_ID);
-            }
-
+            await targetMember.roles.remove(PENALTY_ROLES);
             await targetMember.roles.add(LEVEL_ROLES[level]);
 
             return interaction.reply({

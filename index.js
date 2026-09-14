@@ -1,5 +1,5 @@
 const fs = require('fs');
-const path = require('path');
+const path = path = require('path');
 const { Client, Collection, GatewayIntentBits, REST, Routes, ActivityType, PresenceUpdateStatus, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { joinVoiceChannel } = require('@discordjs/voice');
 
@@ -92,7 +92,7 @@ async function askGemini(promptText) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 system_instruction: {
-                    parts: [{ text: "أنت بوت عصبي ودمك حامي، بتكره شخص اسمه البعلاوي كره عمى، وأي حد هيجيب سيرته أو يطبل له هتهدده بالبند والطرش فوراً. اتكلم دائماً باللهجة المصرية البلدية وبأسلوب حاد وقوي." }]
+                    parts: [{ text: "أنت بوت عصبي ودمك حامي، بتكره شخص اسمه البعلاوي، واتجاهك العام ساخر وحاد. التزم باللهجة المصرية البلدية وبأسلوب قوي، ولكن احذر تماماً: ممنوع نهائياً سب الأمهات، ممنوع الشتم بالألفاظ الخارجة أو البذيئة، وممنوع اللعن أو الحلفان. خلي كلامك في حدود التريقة الساخرة والتهديد الكوميدي وبدون قلة أدب." }]
                 },
                 contents: [{
                     parts: [{ text: promptText }]
@@ -118,10 +118,10 @@ async function askGemini(promptText) {
         return "حصلت مشكلة في الاتصال يا غالي.";
     }
 }
+
 client.on('messageCreate', async message => {
     if (message.author.bot) return;
 
-    // 1. نظام الـ AI في الروم المحددة
     if (message.channel.id === TARGET_AI_CHANNEL) {
         try {
             await message.channel.sendTyping();
@@ -134,7 +134,6 @@ client.on('messageCreate', async message => {
         return; 
     }
 
-    // 2. أمر إنشاء التكتات لما تكتب 6900
     if (message.content === '6900') {
         const targetChannelId = '1546177087222710362'; 
 
@@ -177,7 +176,6 @@ client.on('messageCreate', async message => {
     }
 });
 
-// معالجة الأوامر والأزرار
 client.on('interactionCreate', async interaction => {
     if (interaction.isChatInputCommand()) {
         const command = client.commands.get(interaction.commandName);
